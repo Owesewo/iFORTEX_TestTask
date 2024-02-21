@@ -2,29 +2,23 @@
 using Microsoft.EntityFrameworkCore;
 using TestTask.Models;
 using TestTask.Services.Interfaces;
+using Microsoft.IdentityModel.Tokens;
 
 namespace TestTask.Services.Implementations
 {
     public class OrderService : IOrderService
     {
-        public async Task<Order> GetOrder()
+        private readonly ApplicationDbContext _dbContext;
+
+        public OrderService(ApplicationDbContext applicationDbContext)
         {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=IfortexTestTask;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False")
-                    .Options;
-            var db = new ApplicationDbContext(options);
-            
-            return await db.Orders.FirstOrDefaultAsync();
+            _dbContext = applicationDbContext;
         }
 
-        public async Task<List<Order>> GetOrders()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=IfortexTestTask;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False")
-                    .Options;
-            var db = new ApplicationDbContext(options);
+        public Task<Order> GetOrder() =>
+            _dbContext.Orders.OrderByDescending(o => o.Price).FirstAsync();
 
-            return await db.Orders.ToListAsync();
-        }
+        public Task<List<Order>> GetOrders() =>
+            _dbContext.Orders.Where(o => o.Quantity > 10).ToListAsync();
     }
 }

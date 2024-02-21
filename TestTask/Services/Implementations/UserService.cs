@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TestTask.Data;
+using TestTask.Enums;
 using TestTask.Models;
 using TestTask.Services.Interfaces;
 
@@ -7,24 +8,17 @@ namespace TestTask.Services.Implementations
 {
     public class UserService : IUserService
     {
-        public async Task<User> GetUser()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=IfortexTestTask;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False")
-                    .Options;
-            var db = new ApplicationDbContext(options);
+        private readonly ApplicationDbContext _dbContext;
 
-            return await db.Users.FirstOrDefaultAsync();
+        public UserService(ApplicationDbContext applicationDbContext)
+        {
+            _dbContext = applicationDbContext;
         }
 
-        public async Task<List<User>> GetUsers()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=IfortexTestTask;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False")
-                    .Options;
-            var db = new ApplicationDbContext(options);
+        public Task<User> GetUser() =>
+            _dbContext.Users.OrderBy(u => u.Orders.Count).FirstAsync();
 
-            return await db.Users.ToListAsync();
-        }
+        public Task<List<User>> GetUsers() =>
+            _dbContext.Users.Where(u => u.Status == UserStatus.Inactive).ToListAsync();
     }
 }
